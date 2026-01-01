@@ -30,7 +30,9 @@ wheels/
 *.swo
 *~
 
-# Project specific
+# Project specific - Uploads and Outputs
+uploads/
+outputs/
 output/
 temp/
 *.docx~
@@ -38,9 +40,26 @@ test_files/
 *_processed.docx
 *converted.docx
 
+# Environment variables
+.env
+.env.local
+*.local
+
+# Logs
+*.log
+logs/
+/var/log/
+
 # Mac
 .DS_Store
+.AppleDouble
+.LSOverride
 
 # Test files
 1_2.docx
 1_2converted.docx
+
+# SSH Keys
+*.pem
+*.key
+LightsailDefaultKey*
