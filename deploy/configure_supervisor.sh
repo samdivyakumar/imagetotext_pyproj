@@ -35,22 +35,12 @@ command=$APP_DIR/venv/bin/gunicorn --config $APP_DIR/gunicorn.conf.py app:app
 directory=$APP_DIR
 user=$APP_USER
 autostart=true
-
-# Start the service (don't restart if it doesn't exist yet)
-echo "Starting image2text service..."
-sudo supervisorctl start image2text 2>/dev/null || sudo supervisorctl restart image2text
-
-# Check status
-echo ""
-echo "Service status:"
-sudo supervisorctl status
+autorestart=true
 stopasgroup=true
 killasgroup=true
 stderr_logfile=/var/log/image2text/error.log
 stdout_logfile=/var/log/image2text/access.log
-environment=
-    SECRET_KEY="$(openssl rand -hex 32)",
-    FLASK_ENV="production"
+environment=SECRET_KEY="$(openssl rand -hex 32)",FLASK_ENV="production"
 EOF
 
 # Create log directory
@@ -61,7 +51,15 @@ sudo chown -R $APP_USER:$APP_USER /var/log/image2text
 echo "Reloading Supervisor..."
 sudo supervisorctl reread
 sudo supervisorctl update
-sudo supervisorctl restart image2text
+
+# Start the service (don't restart if it doesn't exist yet)
+echo "Starting image2text service..."
+sudo supervisorctl start image2text 2>/dev/null || sudo supervisorctl restart image2text
+
+# Check status
+echo ""
+echo "Service status:"
+sudo supervisorctl status image2text
 
 echo "✅ Supervisor configured successfully!"
 echo ""
