@@ -10,6 +10,7 @@ from datetime import datetime
 
 from flask import Flask, render_template, request, send_file, jsonify, flash, redirect, url_for
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from image_extractor import ImageExtractor
 from ocr_processor import OCRProcessor
@@ -19,6 +20,9 @@ import config
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Handle proxy headers for proper URL generation behind Nginx
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # Configure upload settings
 UPLOAD_FOLDER = Path('uploads')
