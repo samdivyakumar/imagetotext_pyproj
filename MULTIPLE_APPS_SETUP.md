@@ -620,6 +620,100 @@ For path-based deployment, SSL is shared with your main domain.
 
 ## Troubleshooting
 
+### Common Error: "image2text: ERROR (no such file)"
+
+This error means Supervisor can't find required files or the Gunicorn executable.
+
+**Quick fix - Run troubleshooting script:**
+```bash
+cd /home/ubuntu/image2text_pyproj
+bash deploy/troubleshoot.sh
+```
+
+This will check all requirements and show you what's missing.
+
+**Manual diagnostic steps:**
+```bash
+# 1. Verify app directory and files exist
+ls -la /home/ubuntu/image2text_pyproj/app.py
+ls -la /home/ubuntu/image2text_pyproj/gunicorn.conf.py
+
+# 2. Check virtual environment and Gunicorn
+ls -la /home/ubuntu/image2text_pyproj/venv/bin/gunicorn
+/home/ubuntu/image2text_pyproj/venv/bin/gunicorn --version
+
+# 3. Verify Python packages are installed
+cd /home/ubuntu/image2text_pyproj
+source venv/bin/activate
+pip list | grep -E "flask|gunicorn|python-docx|pytesseract"
+deactivate
+
+# 4. Test Gunicorn command manually
+cd /home/ubuntu/image2text_pyproj
+/home/ubuntu/image2text_pyproj/venv/bin/gunicorn --config gunicorn.conf.py app:app
+# If it starts successfully, press Ctrl+C and continue below
+
+# 5. Check logs for details
+sudo tail -50 /var/log/supervisor/supervisord.log
+sudo tail -50 /var/log/image2text/error.log
+```
+
+**Solution - If deploy.sh wasn't run:**
+```bash
+cd /home/ubuntu/image2text_pyproj
+bash deploy/deploy.sh
+sudo bash deploy/configure_supervisor.sh
+```
+
+---
+
+### Existing app (PM2) not working:
+```bash
+# Check PM2 status
+pm2 status
+pm2 logs
+
+# Restart PM2 app
+pm2 restart <app-name>
+
+# Check if port 3000 is available
+sudo lsof -i :3000
+```
+
+### Image2Text app not starting:
+```bash
+# Check supervisor logs
+sudo tail -50 /var/log/supervisor/supervisord.log
+
+# Check app logs
+sudo tail -50 /var/log/image2text/error.log
+
+# Check if port 8001 is available
+sudo lsof -i :8001
+
+# Restart app
+sudo supervisorctl restart image2text
+
+# Reread and update supervisor config
+sudo supervisorctl reread
+sudo supervisorctl update
+```
+
+### Both apps not accessible via web:
+```bash
+# Check Nginx status
+sudo systemctl status nginx
+
+# Test Nginx configuration
+sudo nginx -t
+
+# Check Nginx error logs
+sudo tail -50 /var/log/nginx/error.log
+
+# Restart Nginx
+sudo systemctl restart nginx
+```
+
 ### Port already in use:
 ```bash
 # Check what's using a port
@@ -634,18 +728,6 @@ sudo nginx -t
 
 # Check for conflicting server blocks
 sudo nginx -T | grep "server_name"
-```
-
-### App not starting:
-```bash
-# Check supervisor logs
-sudo tail -50 /var/log/supervisor/supervisord.log
-
-# Check app logs
-sudo tail -50 /var/log/image2text/error.log
-
-# Restart app
-sudo supervisorctl restart image2text
 ```
 
 ---

@@ -10,6 +10,24 @@ echo "=========================================="
 echo "Configuring Supervisor..."
 echo "=========================================="
 
+# Verify required files exist
+if [ ! -f "$APP_DIR/app.py" ]; then
+    echo "❌ Error: app.py not found in $APP_DIR"
+    exit 1
+fi
+
+if [ ! -f "$APP_DIR/gunicorn.conf.py" ]; then
+    echo "❌ Error: gunicorn.conf.py not found in $APP_DIR"
+    exit 1
+fi
+
+if [ ! -f "$APP_DIR/venv/bin/gunicorn" ]; then
+    echo "❌ Error: Gunicorn not found. Please run deploy.sh first"
+    exit 1
+fi
+
+echo "✓ Required files verified"
+
 # Create Supervisor configuration for the app
 sudo tee /etc/supervisor/conf.d/image2text.conf > /dev/null <<EOF
 [program:image2text]
@@ -17,7 +35,15 @@ command=$APP_DIR/venv/bin/gunicorn --config $APP_DIR/gunicorn.conf.py app:app
 directory=$APP_DIR
 user=$APP_USER
 autostart=true
-autorestart=true
+
+# Start the service (don't restart if it doesn't exist yet)
+echo "Starting image2text service..."
+sudo supervisorctl start image2text 2>/dev/null || sudo supervisorctl restart image2text
+
+# Check status
+echo ""
+echo "Service status:"
+sudo supervisorctl status
 stopasgroup=true
 killasgroup=true
 stderr_logfile=/var/log/image2text/error.log
