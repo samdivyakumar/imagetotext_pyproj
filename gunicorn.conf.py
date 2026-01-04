@@ -1,7 +1,9 @@
 # Gunicorn configuration file for production deployment
 
 # Server socket
-bind = "0.0.0.0:8000"
+# Using port 8001 to avoid conflicts with other apps (e.g., port 3000, 8000)
+# Binding to 127.0.0.1 for security (Nginx will proxy to this)
+bind = "127.0.0.1:8001"
 backlog = 2048
 
 # Worker processes
