@@ -5,7 +5,7 @@ set -e
 
 DOMAIN="${1:-_}"  # Domain or subdomain (e.g., convert.yourdomain.com)
 DEPLOY_MODE="${2:-subdomain}"  # Options: subdomain, path, port
-APP_DIR="/home/ubuntu/image2text_pyproj"
+APP_DIR="/var/www/apps/image2text_pyproj"
 GUNICORN_PORT="8001"  # Different from existing app on port 3000
 
 echo "=========================================="

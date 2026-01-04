@@ -4,7 +4,7 @@
 
 set -e  # Exit on any error
 
-APP_DIR="/home/ubuntu/image2text_pyproj"
+APP_DIR="/var/www/apps/image2text_pyproj"
 APP_USER="ubuntu"
 
 echo "=========================================="

@@ -31,7 +31,9 @@ ssh -i ~/.ssh/LightsailDefaultKey.pem ubuntu@YOUR_SERVER_IP
 
 #### 2. Clone the Repository
 ```bash
-cd /home/ubuntu
+sudo mkdir -p /var/www/apps
+sudo chown ubuntu:ubuntu /var/www/apps
+cd /var/www/apps
 git clone https://github.com/samdivyakumar/imagetotext_pyproj.git image2text_pyproj
 cd image2text_pyproj
 ```
@@ -206,7 +208,7 @@ server {
 
     # NEW: Static files for Image2Text
     location /convert/static {
-        alias /home/ubuntu/image2text_pyproj/static;
+        alias /var/www/apps/image2text_pyproj/static;
         expires 30d;
     }
 }
@@ -219,7 +221,9 @@ server {
 ssh -i ~/.ssh/LightsailDefaultKey.pem ubuntu@3.7.243.78
 
 # 2. Clone the repository
-cd /home/ubuntu
+sudo mkdir -p /var/www/apps
+sudo chown ubuntu:ubuntu /var/www/apps
+cd /var/www/apps
 git clone https://github.com/samdivyakumar/imagetotext_pyproj.git image2text_pyproj
 cd image2text_pyproj
 
@@ -356,7 +360,7 @@ Deploy on a path like `yourdomain.com/convert`
    }
    
    location /convert/static {
-       alias /home/ubuntu/image2text_pyproj/static;
+       alias /var/www/apps/image2text_pyproj/static;
        expires 30d;
    }
    ```
@@ -626,7 +630,7 @@ This error means Supervisor can't find required files or the Gunicorn executable
 
 **Quick fix - Run troubleshooting script:**
 ```bash
-cd /home/ubuntu/image2text_pyproj
+cd /var/www/apps/image2text_pyproj
 bash deploy/troubleshoot.sh
 ```
 
@@ -635,22 +639,22 @@ This will check all requirements and show you what's missing.
 **Manual diagnostic steps:**
 ```bash
 # 1. Verify app directory and files exist
-ls -la /home/ubuntu/image2text_pyproj/app.py
-ls -la /home/ubuntu/image2text_pyproj/gunicorn.conf.py
+ls -la /var/www/apps/image2text_pyproj/app.py
+ls -la /var/www/apps/image2text_pyproj/gunicorn.conf.py
 
 # 2. Check virtual environment and Gunicorn
-ls -la /home/ubuntu/image2text_pyproj/venv/bin/gunicorn
-/home/ubuntu/image2text_pyproj/venv/bin/gunicorn --version
+ls -la /var/www/apps/image2text_pyproj/venv/bin/gunicorn
+/var/www/apps/image2text_pyproj/venv/bin/gunicorn --version
 
 # 3. Verify Python packages are installed
-cd /home/ubuntu/image2text_pyproj
+cd /var/www/apps/image2text_pyproj
 source venv/bin/activate
 pip list | grep -E "flask|gunicorn|python-docx|pytesseract"
 deactivate
 
 # 4. Test Gunicorn command manually
-cd /home/ubuntu/image2text_pyproj
-/home/ubuntu/image2text_pyproj/venv/bin/gunicorn --config gunicorn.conf.py app:app
+cd /var/www/apps/image2text_pyproj
+/var/www/apps/image2text_pyproj/venv/bin/gunicorn --config gunicorn.conf.py app:app
 # If it starts successfully, press Ctrl+C and continue below
 
 # 5. Check logs for details
@@ -660,7 +664,7 @@ sudo tail -50 /var/log/image2text/error.log
 
 **Solution - If deploy.sh wasn't run:**
 ```bash
-cd /home/ubuntu/image2text_pyproj
+cd /var/www/apps/image2text_pyproj
 bash deploy/deploy.sh
 sudo bash deploy/configure_supervisor.sh
 ```
@@ -740,8 +744,8 @@ For production, I recommend:
 2. Set up DNS: `convert.yourdomain.com` → Your server IP
 3. Enable SSL for both domains
 4. Keep apps in separate directories:
-   - Existing: `/home/ubuntu/app` (port 3000)
-   - Image2Text: `/home/ubuntu/image2text_pyproj` (port 8001)
+   - Existing: `/var/www/apps/your-app` (port 3000)
+   - Image2Text: `/var/www/apps/image2text_pyproj` (port 8001)
 
 This gives you:
 - ✅ `https://yourdomain.com` (existing app)
