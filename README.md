@@ -231,6 +231,46 @@ python main.py problem_doc.docx --log-level DEBUG
 
 This project is open source and available for personal and commercial use.
 
+---
+
+## Production Deployment
+
+### Web Application
+
+This project includes a production-ready Flask web application with a user-friendly interface.
+
+**Quick Deploy to AWS Lightsail:**
+```bash
+# Clone and deploy
+git clone https://github.com/samdivyakumar/imagetotext_pyproj.git
+cd imagetotext_pyproj
+bash deploy/deploy.sh
+sudo bash deploy/configure_supervisor.sh
+```
+
+**Access:** Browse to `http://YOUR_SERVER_IP:8001`
+
+### Multi-App Deployment
+
+Running alongside another app? See detailed guides:
+- **[Multi-App Setup Guide](MULTIPLE_APPS_SETUP.md)** - Deploy with existing applications
+- **[AWS Deployment Guide](AWS_DEPLOYMENT_GUIDE.md)** - Complete AWS setup
+- **[Quick Start](QUICKSTART.md)** - 5-minute setup guide
+
+**Example:** Deploy with existing Zoom Dashboard app:
+```bash
+# Your setup: Zoom Dashboard on port 3000, Image2Text on /image2text/
+sudo nano /etc/nginx/sites-available/zoom-dashboard
+# Add location block (see MULTIPLE_APPS_SETUP.md)
+sudo systemctl reload nginx
+```
+
+Access:
+- **Main app**: `http://YOUR_IP/`  
+- **Image2Text**: `http://YOUR_IP/image2text/`
+
+---
+
 ## Contributing
 
 Contributions are welcome! Feel free to submit issues or pull requests.

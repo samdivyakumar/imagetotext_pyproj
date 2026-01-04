@@ -14,6 +14,35 @@ You have **3 deployment options**:
 
 ---
 
+## ⚡ Common Issues - Quick Fixes
+
+### "Cannot POST /upload" error
+```bash
+cd /var/www/apps/image2text_pyproj
+git pull
+sudo supervisorctl restart image2text
+```
+Access at: `http://YOUR_IP/image2text/` (note the trailing slash!)
+
+### Permission denied on file upload
+```bash
+cd /var/www/apps/image2text_pyproj
+sudo chown -R ubuntu:ubuntu uploads/ outputs/
+sudo chmod -R 775 uploads/ outputs/
+sudo supervisorctl restart image2text
+```
+
+### Service not starting
+```bash
+cd /var/www/apps/image2text_pyproj
+bash deploy/deploy.sh  # Reinstall dependencies
+sudo bash deploy/configure_supervisor.sh
+```
+
+**More troubleshooting:** See [Troubleshooting section](#troubleshooting) below.
+
+---
+
 ## Quick Start: Complete Deployment Steps
 
 ### Prerequisites
@@ -126,7 +155,7 @@ sudo bash deploy/setup_ssl.sh yourdomain.com
 
 **Path-based deployment:**
 - Existing app: `http://yourdomain.com`
-- Image2Text: `http://yourdomain.com/convert`
+- Image2Text: `http://yourdomain.com/image2text/`
 
 **Port-based deployment:**
 - Existing app: `http://yourdomain.com:3000`
@@ -178,6 +207,9 @@ server {
     listen 80;
     server_name 3.7.243.78;
 
+    # Increase upload size for Image2Text app
+    client_max_body_size 16M;
+
     # Your existing app (unchanged)
     location / {
         proxy_pass http://localhost:3000;
@@ -193,23 +225,21 @@ server {
     }
 
     # NEW: Image2Text Application
-    location /convert {
-        rewrite ^/convert(.*) $1 break;
-        proxy_pass http://127.0.0.1:8001;
+    location /image2text/ {
+        proxy_pass http://127.0.0.1:8001/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Prefix /image2text;
         proxy_connect_timeout 300;
         proxy_send_timeout 300;
         proxy_read_timeout 300;
-        client_max_body_size 16M;
     }
-
-    # NEW: Static files for Image2Text
-    location /convert/static {
-        alias /var/www/apps/image2text_pyproj/static;
-        expires 30d;
+    
+    # Redirect /image2text to /image2text/ (with trailing slash)
+    location = /image2text {
+        return 301 /image2text/;
     }
 }
 ```
@@ -231,32 +261,41 @@ cd image2text_pyproj
 bash deploy/deploy.sh
 
 # 4. Edit your existing Nginx configuration
-sudo nano /etc/nginx/sites-available/default
+sudo nano /etc/nginx/sites-available/zoom-dashboard
 # Copy the complete configuration shown above
+# (Or use the reference file: cat deploy/nginx_zoom_dashboard_config.txt)
 
-# 5. Test Nginx configuration
+# 5. Disable conflicting image2text site if it exists
+sudo rm -f /etc/nginx/sites-enabled/image2text
+
+# 6. Test Nginx configuration
 sudo nginx -t
 
-# 6. If test passes, restart Nginx
-sudo systemctl restart nginx
+# 7. If test passes, reload Nginx
+sudo systemctl reload nginx
 
-# 7. Start the Image2Text app
+# 8. Fix permissions for upload/output directories
+sudo mkdir -p /var/www/apps/image2text_pyproj/uploads /var/www/apps/image2text_pyproj/outputs
+sudo chown -R ubuntu:ubuntu /var/www/apps/image2text_pyproj/uploads /var/www/apps/image2text_pyproj/outputs
+sudo chmod -R 775 /var/www/apps/image2text_pyproj/uploads /var/www/apps/image2text_pyproj/outputs
+
+# 9. Start the Image2Text app
 sudo bash deploy/configure_supervisor.sh
 
-# Check your existing app (PM2)
+# 10. Check your existing app (PM2)
 pm2 status
 pm2 list
 
-# Check Image2Text app (Supervisor)
+# 11. Check Image2Text app (Supervisor)
 sudo supervisorctl status image2text
 
-# Test both apps locally
+# 12. Test both apps locally
 curl http://localhost:3000  # Your existing app
-curl http://localhost:8001/health  # Image2Text app
+curl http://localhost:8001/  # Image2Text app
 
-# 9. Test via browser
+# 13. Test via browser
 # Existing app: http://3.7.243.78
-# Image2Text: http://3.7.243.78/convert
+# Image2Text: http://3.7.243.78/image2text/
 ```
 
 #### Important Notes for PM2 + Supervisor Setup
@@ -279,7 +318,9 @@ curl http://localhost:8001/health  # Image2Text app
 #### Access Your Applications
 
 - **Existing App**: `http://3.7.243.78` → port 3000 (unchanged)
-- **Image2Text App**: `http://3.7.243.78/convert` → port 8001 (new)
+- **Image2Text App**: `http://3.7.243.78/image2text/` → port 8001 (new)
+
+**Important:** Note the trailing slash in `/image2text/` - it's required for proper routing.
 
 Both apps run independently without any conflicts! ✅
 
@@ -702,6 +743,36 @@ sudo supervisorctl restart image2text
 sudo supervisorctl reread
 sudo supervisorctl update
 ```
+
+### Permission denied errors when uploading files:
+```bash
+# Fix upload/output directory permissions
+cd /var/www/apps/image2text_pyproj
+sudo chown -R ubuntu:ubuntu uploads/ outputs/
+sudo chmod -R 775 uploads/ outputs/
+
+# Restart the app
+sudo supervisorctl restart image2text
+```
+
+### "Cannot POST /upload" or 500 Internal Server Error:
+This means the app is not handling the proxy path correctly.
+
+**Fix:**
+```bash
+cd /var/www/apps/image2text_pyproj
+git pull  # Get latest code with ProxyFix middleware
+
+# Verify the Nginx config has X-Forwarded-Prefix header
+sudo nano /etc/nginx/sites-available/zoom-dashboard
+# Make sure location /image2text/ has:
+# proxy_set_header X-Forwarded-Prefix /image2text;
+
+sudo systemctl reload nginx
+sudo supervisorctl restart image2text
+```
+
+**Important:** Always access the app at `http://3.7.243.78/image2text/` (with trailing slash)
 
 ### Both apps not accessible via web:
 ```bash
