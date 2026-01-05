@@ -10,7 +10,7 @@ backlog = 2048
 workers = 4  # Recommended: 2 * CPU cores + 1
 worker_class = "sync"
 worker_connections = 1000
-timeout = 600  # 10 minutes - OCR processing for documents with many images can take time
+timeout = 1800  # 30 minutes - OCR processing for large documents (150+ images) can take 10-20 minutes
 keepalive = 2
 
 # Process naming
