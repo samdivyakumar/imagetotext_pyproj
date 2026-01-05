@@ -28,7 +28,7 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 UPLOAD_FOLDER = Path('uploads')
 OUTPUT_FOLDER = Path('outputs')
 ALLOWED_EXTENSIONS = {'docx'}
-MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB max file size
+MAX_CONTENT_LENGTH = 100 * 1024 * 1024  # 100MB max file size
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER

@@ -6,7 +6,7 @@ server {
     server_name 3.7.243.78;
 
     # Increase upload size for Image2Text app
-    client_max_body_size 50M;
+    client_max_body_size 100M;
 
     # Main Zoom Dashboard (PM2 app on port 3000)
     location / {
